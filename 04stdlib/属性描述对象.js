@@ -376,3 +376,111 @@ let copy = extend(
   },
 )
 console.log(copy) // { a: [Getter] }
+
+/*
+  属性描述符
+    描述对象的属性, 控制它的行为, 可写 可遍历 ... 元信息
+*/
+/*
+  value 该属性的属性值, 默认为 undefined
+  writable 可写性(value 是否能够更改), 默认为 true
+  enumerable 遍历性, 默认为 true, 如果为 false Object.keys() for ... in 循环将跳过该属性
+  configurable 可配置性(属性描述符的可写性), 默认为 true 如果设为 false 将无法删除该属性, 不得改变该属性的属性描述符
+  get 取值函数, 默认为 undefined
+  set 存值函数, 默认为 undefined
+*/
+
+let obj = { p: 'a' }
+// { value: 'a', writable: true, enumerable: true, configurable: true }
+console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
+// Object.getOwnPropertyDescriptor() 只能用于自身的属性, 不能用于继承的属性(原型的属性)
+var obj = { p: 'a' }
+console.log(Object.getOwnPropertyDescriptor(obj, 'toString')) // undefined
+
+/* Object.getOwnPropertyNames() 遍历√ 不可遍历√ 返回一个数组, 成员是参数对象自身的全部属性的属性名 */
+/* 自身√ 继承× */
+let obj = Object.defineProperties(
+  {},
+  {
+    p1: { value: 1, enumerable: true },
+    p2: { value: 2, enumerable: false },
+  },
+)
+console.log(Object.getOwnPropertyNames(obj)) // [ 'p1', 'p2' ] 遍历√ 不可遍历√ 自身√ 继承×
+console.log(Object.keys(obj)) // [ 'p1'] 遍历√ 不可遍历× 自身√ 继承×
+
+console.log(Object.keys(Object.prototype)) // []
+console.log(Object.getOwnPropertyNames(Object.prototype))
+/*
+[
+  'constructor',
+  '__defineGetter__',
+  '__defineSetter__',
+  'hasOwnProperty',
+  '__lookupGetter__',
+  '__lookupSetter__',
+  'isPrototypeOf',
+  'propertyIsEnumerable',
+  'toString',
+  'valueOf',
+  '__proto__',
+  'toLocaleString'
+]
+*/
+
+/*
+  Object.defineProperty() 方法允许通过属性描述对象, 定义或修改一个属性, 然后返回修改后的对象
+    修改一个属性的属性描述符, 然后返回的是此对象(目标属性所在的对象)
+  参数
+    object 属性所在的对象
+    propertyName 字符串 属性名
+    attributeObject 属性描述对象
+*/
+
+let obj = Object.defineProperty({}, 'p', {
+  value: 123,
+  writable: false,
+  enumerable: false,
+  configurable: false,
+})
+console.log(obj.p) // 123
+obj.p = 246
+console.log(obj.p) // 123
+/*
+  一次性定义或者修改多个属性, 可以使用 Object.defineProperties() 方法
+*/
+var obj = Object.defineProperties(
+  {},
+  {
+    p1: {
+      value: 123,
+      enumerable: true,
+    },
+    p2: {
+      value: 'abc',
+      enumerable: true,
+    },
+    p3: {
+      get: function () {
+        return this.p1 + this.p2
+      },
+      enumerable: true,
+      configurable: true,
+    },
+  },
+)
+console.log(obj.p1)
+console.log(obj.p2)
+console.log(obj.p3)
+/*
+  一旦定义了 get 和 set 就不能同时定义 writable 属性和 value 属性, 否则报错
+*/
+var obj = {}
+Object.defineProperty(obj, 'p', {
+  value: 123,
+  get: function () {
+    return 456
+  }
+}) /* TypeError: Invalid property descriptor. Cannot both specify accessors and a value or writable attribute, #<Object>
+*/
+let obj = {}

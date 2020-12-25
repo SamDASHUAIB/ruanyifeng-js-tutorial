@@ -286,3 +286,58 @@ users
   .forEach(function (email) {
     console.log(email)
   }) // tom@example.com 过滤出以 t 开头的 Email 地址
+
+/*
+  Array() 构造函数有一个很大的缺陷, 不同的参数会导致行为不一致, 不要使用
+  直接用数组字面量是更好的做法
+*/
+var arr = []
+console.log(arr)
+
+/* 静态方法 Array.isArray() 返回一个布尔值, 表示参数是否为数组, 可以弥补 typeof 运算符的不足 */
+var arr = [1, 2, 3]
+console.log(typeof arr) // object 不能精准识别数组
+console.log(Array.isArray(arr)) // true 可以识别数组
+
+/*
+  实例方法, valueOf() toString()
+  valueOf() 一个所有对象都拥有的方法, 表示对该对象求值, 不同对象的 valueOf 方法不一定相同, 数组的 valueOf() 返回数组本身
+  toString() 方法返回数组的字符串形式
+*/
+var arr = [1, 2, 3]
+console.log(arr.valueOf()) // [ 1, 2, 3 ]
+console.log(arr.toString()) // 1,2,3
+
+/* push 方法, 在数组末端添加一个或多个元素, 并返回添加新元素后的长度, 改变原数组 */
+var arr = []
+arr.push(1)
+console.log(arr.push('a')) // 2 返回添加后的长度
+console.log(arr) // [ 1, 'a' ]
+
+/* pop 方法用于删除数组的最后一个元素, 并返回该元素, 改变原数组 */
+var arr = ['a', 'b', 'c']
+console.log(arr.pop()) // c 返回被删除的元素
+console.log(arr) // [ 'a', 'b' ]
+
+/* pop + push = 后进先出的 "栈" 结构 */
+var arr = []
+arr.push(1, 2)
+arr.push(3)
+arr.pop()
+console.log(arr) // [ 1, 2 ]
+
+/* shift() 用于删除第一个元素, 并且返回该元素, 改变原数组 */
+var a = ['a', 'b', 'c']
+console.log(a.shift()) // a 返回被删除的元素
+console.log(a) // [ 'b', 'c' ]
+
+/*
+  实例方法
+    push pop 末端添加, 末端删除 改变原来数组 push + pop = 后进先出"栈结构"
+    shift unshift 删除, 添加第一个元素, 改变原来数组, push + shift = 先进先出 "队列结构"
+    join 将所有数组成员连接成一个字符串返回, 默认用逗号分隔(可以传入分隔符)
+    reverse 颠倒排列数组元素, 返回改变后的数组, 注意, 此方法将改变原数组
+    slice 提取目标数组的一部分, 返回一个新的数组, 原来的数组不变 [)
+*/
+let name = ['sam']
+console.log(name.shift())

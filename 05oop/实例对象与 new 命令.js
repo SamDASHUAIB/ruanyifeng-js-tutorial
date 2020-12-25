@@ -25,20 +25,20 @@
 // 如果发现没有使用 new 命令, 直接返回一个实例对象
 function Fubar(foo, bar) {
   if (!(this instanceof Fubar)) {
-    return new Fubar(foo, bar)
+    return new Fubar(foo, bar);
   }
-  this._foo = foo
-  this._bar = bar
+  this._foo = foo;
+  this._bar = bar;
 }
-console.log(Fubar(1, 2)._foo) // 1
-console.log(new Fubar(1, 2)._foo) // 1
+console.log(Fubar(1, 2)._foo); // 1
+console.log(new Fubar(1, 2)._foo); // 1
 
 /*
   new  命令的原理
-  1.创建一个空对象, 作为将要返回的实例对象
-  2.将这个空对象的原型, 指向构造函数的 prototype 属性
-  3.将这个空对象赋值给函数内部的 this 关键字
-  4.开始执行构造函数内部的代码
+  1.创建一个空对象, 作为将要返回的实例对象  空对象 => 实例对象
+  2.将这个空对象的原型, 指向构造函数的 prototype 属性(继承原型)  继承 prototype
+  3.将这个空对象赋值给函数内部的 this 关键字  空对象 => this 关键字
+  4.开始执行构造函数内部的代码  开始执行构造函数内部的代码
 
   在构造函数内部, this 指的是一个新生成的空对象, 所有针对 this 的操作, 都会发生在这个空对象上
   操作一个空对象(this 对象)将其 "构造" 成需要的样子
@@ -49,35 +49,35 @@ console.log(new Fubar(1, 2)._foo) // 1
   使用 new 命令, 总是返回一个对象, 要么是实例对象, 要么是 return 语句指定的对象
 */
 var Vehicle = function () {
-  this.price = 1000
+  this.price = 1000;
   // 非对象, 忽略
-  return 1000
-}
-console.log(new Vehicle() === 1000) // false
+  return 1000;
+};
+console.log(new Vehicle() === 1000); // false
 
 var Vehicle = function () {
-  this.price = 1000
+  this.price = 1000;
   // 对象, 直接返回此对象, 而非 this 对象
-  return { price: 2000 }
-}
-console.log(new Vehicle().price) // 2000
+  return { price: 2000 };
+};
+console.log(new Vehicle().price); // 2000
 
 // 对普通函数(内部没有 this 关键词的函数)使用 new 命令, 返回一个空对象
 function getMessage() {
-  return 'this is a message'
+  return 'this is a message';
 }
-var msg = new getMessage()
-console.log(msg) // getMessage {}
-console.log(typeof msg) // object
+var msg = new getMessage();
+console.log(msg); // getMessage {}
+console.log(typeof msg); // object
 
-// 以现有对象作为模板, 生成新的实例对象
+/* 以现有对象为模板, 生成新的实例对象 */
 var person1 = {
   name: '张三',
   age: 18,
   greeting: function () {
-    console.log(`Hi! I'm ${this.name}.`)
+    console.log(`Hi! I'm ${this.name}.`);
   },
-}
-var person2 = Object.create(person1)
-console.log(person2.name) // 张三
-person2.greeting() // Hi! I'm 张三.
+};
+var person2 = Object.create(person1);
+console.log(person2.name); // 张三
+person2.greeting(); // Hi! I'm 张三.
