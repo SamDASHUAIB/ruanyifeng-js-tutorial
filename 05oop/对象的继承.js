@@ -17,21 +17,25 @@ var cat2 = new Cat('二毛', '黑色');
 console.log(cat1.meow === cat2.meow); // false
 
 /*
+  从构造函数存在浪费资源的缺点 => prototype
   构造函数的缺点(实例对象相同行为的方法无法共享, 造成资源浪费) => prototype
+
   prototype 属性的作用
-  原型对象的所有属性和方法, 都能被实例对象共享
-  节省内存
-  体现了实例对象之间的关系(兄弟)
+    原型对象的所有属性和方法, 都能被实例对象共享
+    节省内存
+    体现了实例对象之间的关系(兄弟)
 
   每一个函数(Function)都有一个 prototype 属性, 指向一个对象
 */
 function f() {}
 console.log(typeof f.prototype); // object, 函数 f 默认具有 prototype 属性, 指向一个对象
 // 对于构造函数来说, 生成实例的时候, 该属性会自动成为实例对象的原型(原型继承)
+// 构造函数的 prototype 属性 => 新建实例对象的 prototype
 function Animal(name) {
   this.name = name;
 }
-Animal.prototype.color = 'white';
+Animal.prototype.color =
+  'white'; /* Animal 作为构造函数存在一个 prototype 属性, 指向一个对象 */
 var cat1 = new Animal('大毛');
 var cat2 = new Animal('二毛');
 console.log(cat1.color); // 'white'
@@ -49,14 +53,14 @@ console.log(cat1.color); // 'black' 覆盖掉原型
 console.log(cat2.color); // 'yellow'
 
 /*
-  总的来说, 原型对象的作用, 就是定义所有实例对象共享的属性和方法
+  总的来说, 原型对象的作用, 就是定义所有实例对象共享的属性和方法,
   实例对象可以视作从原型对象衍生出来的子对象
 
   原型对象的作用: 定义所有实例对象共享的属性和方法
 */
 
 /*
-  原型链
+  原型链 原型是对象, 对象有原型, 因此构成了原型链
   任何一个对象, 都可以充当其他对象的原型
   原型对象也是对象, 所以也有自己的原型
   对象 => 原型 => 原型的原型 => Object.prototype => null
@@ -80,8 +84,9 @@ console.log(mine.length); // 3
 console.log(mine instanceof Array); // true 左边是不是右边的实例
 
 /*
-  constructor 属性
+  构造函数的原型(prototype)的 constructor 属性
   默认指向 prototype 对象所在的构造函数
+  xxx.prototype.constructor === xxx (xxx 就是构造函数)
 */
 function P() {}
 console.log(P.prototype.constructor === P); // true 函数的原型对象默认指向函数自身(构造函数)
@@ -93,15 +98,18 @@ console.log(p.constructor === P); // true
 console.log(p.constructor === P.prototype.constructor); // true p 从原型对象 P.prototype 上读取而来 constructor 属性
 
 console.log(p.hasOwnProperty('constructor')); // false p 自身没有 constructor 属性
-// constructor 属性可以得知某个实例对象, 到底是哪一个构造函数产生的
+
+/*
+  constructor 属性可以得知某个实例对象, 到底是哪一个构造函数产生的
+*/
 function F() {}
 var f = new F();
 console.log(f.constructor === F); // true
 console.log(f.constructor === RegExp); // false
 
 /*
-  有了 constructor 属性, 就可以从一个实例新建另一个实例
-  同时使得在实例对象中, 调用自身的构造函数成为可能
+  有了 constructor 属性, 就可以从一个实例(的 constructor 属性)新建另一个实例
+  同时使得在实例对象中, 调用自身的构造函数(其实是通过 prototype 进行调用的)成为可能
 */
 function Constr() {}
 var x = new Constr();
@@ -111,7 +119,7 @@ console.log(y instanceof Constr); // true
 
 Constr.prototype.createCopy = function () {
   // 调用构造函数, 新建另一个实例
-  return new this.constructor(); /* 在实例方法 createCopy 中调用 "原型"的 constructor 属性(方法) */
+  return new this.constructor(); /* 在实例方法 createCopy 中调用 "原型" 的 constructor 属性(方法) */
 };
 
 // constructor 属性表示原型对象与构造函数之间的关联关系, 如果修改了原型对象, 一般会同时修改 constructor 属性, 防止引用的时候出错
@@ -125,14 +133,14 @@ Person.prototype = {
   // constructor: Person,
   method: function () {},
 };
-console.log(Person.prototype.constructor === Person); // false
+console.log(Person.prototype.constructor === Person); // false, 新的原型对象中没有定义一个 constructor 的属性, 当然访问不到
 console.log(Person.prototype.constructor === Object); // true 由于 Person 的新原型是一个普通对象, 而普通对象的 constructor 属性指向 Object 构造函数
 
 /*
   好的写法, 同时修改 constructor 属性的指向
 */
 C.prototype = {
-  constructor: C,
+  constructor: C /* 重新确立 constructor 属性 */,
   method1: function () {},
 };
 /*
@@ -152,11 +160,12 @@ console.log(f.constructor.name); // 通过 name 属性(函数的 name 属性), �
 
 /*
   instanceof 运算符返回一个布尔值, 表示对象是否为某个构造函数的实例
-  左边是实例对象, 右边是构造函数
-  左边的构造函数是不是右边
+
+  左边 是不是 右边 的实例
+  左边 的构造函数是不是 右边
 
   instanceof 检查整个原型链, 因此同一个实例对象, 可能会对多个构造函数都返回 true
-  instanceof 的原理
+  instanceof 的原理: "实例对象" 的 prototype >= "构造函数" 的 prototype
     检查右边构造函数的 prototype 属性, 是否在左边实例对象的原型链上
 
   instanceof 失真
@@ -211,8 +220,11 @@ function Sub(value) {
 }
 // 不要直接赋值为 Super.prototype, (共享, 容易一起被修改)
 Sub.prototype = Object.create(Super.prototype);
+Sub.prototype.constructor = Sub; /* 注意, constructor 也需要重新指定 */
+Sub.prototype.method = f; /* 添加新的共享属性或方法 */
+
 // 或者, 都是将父类的一个实例赋值给 Sub.prototype
-// ***** 弊端: 子类会具有父类实例的方法 ****** 不推荐
+// ***** 弊端: 子类会具有父类实例的方法(父类中定义的方法, 而非 Super.prototype 中定义的方法) ****** 不推荐
 Sub.prototype = new Super();
 Sub.prototype.constructor = Sub;
 Sub.prototype.method = function () {};
@@ -243,6 +255,6 @@ Rectangle.prototype.constructor = Rectangle;
 ClassB.prototype.print = function () {
   ClassA.prototype.print.call(
     this
-  ); /* 先调用父类 A 的 print 方法, 再部署自己的代码, 等于继承了父类 A 的 print 方法 */
+  ); /* 先调用父类 A 的 print 方法, 再部署自己的代码(继承的本质是复用代码), 等于继承了父类 A 的 print 方法 */
   // ... other code
 };

@@ -34,11 +34,14 @@ console.log(Fubar(1, 2)._foo); // 1
 console.log(new Fubar(1, 2)._foo); // 1
 
 /*
-  new  命令的原理
-  1.创建一个空对象, 作为将要返回的实例对象  空对象 => 实例对象
-  2.将这个空对象的原型, 指向构造函数的 prototype 属性(继承原型)  继承 prototype
-  3.将这个空对象赋值给函数内部的 this 关键字  空对象 => this 关键字
-  4.开始执行构造函数内部的代码  开始执行构造函数内部的代码
+  new 命令的原理
+  1.创建一个空对象, 作为将要返回的实例对象
+      空对象 => 实例对象
+  2.将这个空对象的原型, 指向构造函数的 prototype 属性(继承原型)
+      继承 prototype
+  3.将这个空对象赋值给函数内部的 this 关键字
+      空对象 => this 关键字
+  4.开始执行构造函数内部的代码
 
   在构造函数内部, this 指的是一个新生成的空对象, 所有针对 this 的操作, 都会发生在这个空对象上
   操作一个空对象(this 对象)将其 "构造" 成需要的样子
@@ -80,4 +83,5 @@ var person1 = {
 };
 var person2 = Object.create(person1);
 console.log(person2.name); // 张三
+console.log(Object.getPrototypeOf(person2)); // person1
 person2.greeting(); // Hi! I'm 张三.

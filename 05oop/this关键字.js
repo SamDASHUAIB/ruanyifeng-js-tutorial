@@ -44,8 +44,8 @@ var B = {
   describe: f,
 };
 // 随着 f 所在的对象不同, this 的指向也不同
-console.log(A.describe()); // 姓名: 张三
-console.log(B.describe()); // 姓名: 李四
+console.log(A.describe()); // 姓名: 张三 环境是 A
+console.log(B.describe()); // 姓名: 李四 环境是 B
 
 // 函数 f 内部使用了 this 关键字, 随着 f 所在的对象不同, this 的指向也不同
 var A = {
@@ -62,8 +62,8 @@ console.log(f()); // '姓名: 李四'
 /*
   在 JavaScript 语言之中, 一切皆对象, 运行环境也是对象, 所以函数都是在某个对象之中运行 (运行环境也是对象)
   this 就是函数运行时所在的对象(环境)
-  JavaScript 一切皆对象, 运行环境也是对象, 所以函数都是在某个对象之中运行
-  this 就是函数运行时所在的对象(this 就是环境)
+
+  运行环境也是对象 函数都是在某个对象之中运行 this 就是函数运行时所在的对象(this 就是运行环境)
 
   JavaScript 支持运行环境动态切换, 也就是说 this 的指向是动态的, 无法事先确定到底指向哪一个对象, 这一点让人很迷惑
 */
@@ -72,7 +72,7 @@ console.log(f()); // '姓名: 李四'
   this 如此设计其实和 "内存里面的数据结构有关"(对象的设计)
 */
 var obj = { foo: 5 };
-// 变量 obj 是一个地址(引用) { foo: 5 } 的地址
+// 变量 obj 是一个内存地址(引用) { foo: 5 } 的地址
 
 obj.foo;
 // 引擎先从 obj 拿到内存地址, 然后再从该地址读出原始的对象, 返回它的 foo 属性
@@ -100,8 +100,10 @@ var obj = { obj: function () {} };
 //   }
 // }
 
-// 那么由于函数是一个单独的值, 所有它可以在不同的环境(上下文)执行
-// 由于函数是一个单独的值, 而非强依赖于某一个对象, 所以他可以在不同的环境(上下文)执行
+/*
+  那么由于函数是一个单独的值, 所以它可以在不同的环境(上下文)中执行
+  函数与对象没有强耦合在一起
+*/
 var f = function () {};
 var obj = { f: f };
 
@@ -116,14 +118,15 @@ var f = function () {
   console.log(x);
 };
 
-// 由于函数可以在不同的运行环境执行, 所以需要有一种机制, 能够在函数体内部获得当前的运行环境(context)
-// 所以, this 的设计目的就是在函数体内部指代函数当前的运行环境
 /*
   由于函数可以在不同的运行环境执行, 所以需要有一种机制, 能够在函数体内部获得当前的运行环境
   this 的设计目的就是在函数体内部, 指代当前函数的运行环境
+  this 就是 content 就是当前函数的运行环境
 */
 var f = function () {
-  // this.x 就是指当前运行环境的 x
+  /*
+    this.x 就是当前运行环境的 x
+  */
   console.log(this.x);
 };
 
@@ -138,7 +141,9 @@ f();
 // obj 环境执行
 obj.f();
 
-// this 的使用场合
+/**
+ * this 的使用场合
+ */
 // 全局, this 指代 global
 function f() {
   console.log(this === globalThis);
@@ -209,11 +214,13 @@ var b = {
 };
 var a = {
   p: 'hello',
-  b: b,
+  b: b /* key b 中保存仅仅是一个内存地址 */,
 };
 a.b.m(); // 等同于 b.m() 对象 b 没有属性 p 因此返回 undefined
 
-// 始终牢记, 方法是独立于内存的(无论在对象中定义还是全局中定义)
+/*
+  始终牢记, 对象以及函数在内存中的数据结构, 方法是独立于内存的, 多个对象嵌套时保持松散耦合, key 中保存的仅仅是一个内存地址(对象 OR 函数)
+*/
 var a = {
   b: {
     m: function () {
@@ -246,21 +253,21 @@ var o = {
   },
 };
 /*
-{ f1: [Function: f1] }
-Object [global] {
-  global: [Circular],
-  clearInterval: [Function: clearInterval],
-  clearTimeout: [Function: clearTimeout],
-  setInterval: [Function: setInterval],
-  setTimeout: [Function: setTimeout] {
-    [Symbol(nodejs.util.promisify.custom)]: [Function]
-  },
-  queueMicrotask: [Function: queueMicrotask],
-  clearImmediate: [Function: clearImmediate],
-  setImmediate: [Function: setImmediate] {
-    [Symbol(nodejs.util.promisify.custom)]: [Function]
+  { f1: [Function: f1] }
+  Object [global] {
+    global: [Circular],
+    clearInterval: [Function: clearInterval],
+    clearTimeout: [Function: clearTimeout],
+    setInterval: [Function: setInterval],
+    setTimeout: [Function: setTimeout] {
+      [Symbol(nodejs.util.promisify.custom)]: [Function]
+    },
+    queueMicrotask: [Function: queueMicrotask],
+    clearImmediate: [Function: clearImmediate],
+    setImmediate: [Function: setImmediate] {
+      [Symbol(nodejs.util.promisify.custom)]: [Function]
+    }
   }
-}
 */
 o.f1();
 // 实际运行代码
@@ -291,7 +298,7 @@ var o = {
     console.log(this);
     var that = this;
     var f2 = (function () {
-      console.log(thar);
+      console.log(that);
     })();
   },
 };
@@ -305,6 +312,11 @@ o.f1();
   避免数组处理方法中的 this
   map forEach 方法, 允许提供一个函数作为参数, 这个函数内部不应该使用 this
   数组的 map foreach 方法中不应该使用 this
+  四种解决方案
+    使用箭头函数, 箭头函数没有自己的 this 而是借用外层的 this
+    使用中间变量 that 固定外层的 this
+    使用 forEach 等数组处理方法的第二个参数(传入的第二个参数就是 this 绑定的对象)
+    使用 bind
 */
 var o = {
   v: 'hello',
@@ -312,7 +324,9 @@ var o = {
   f: function f() {
     this.p.forEach(function (item) {
       // forEach 回调函数中的this 其实指向 global 对象
-      // 同样还是多层嵌套下的 this 其内部的不继承自外部, 而是直接指向顶层对象
+      /*
+        多层嵌套下, 其内部的 this 不继承外部的 this(对象), 而是直接指向顶层对象
+      */
       console.log(this.v + ' ' + item);
     });
   },
@@ -367,6 +381,20 @@ var o = {
   },
 };
 o.f();
+
+// 情况四: 使用 bind
+var o = {
+  v: 'hello',
+  p: ['a1', 'a2'],
+  f: function () {
+    this.p.forEach(
+      function (item) {
+        console.log(this.v + ' ' + item);
+      }.bind(this) /* 返回一个绑定了对象 o 的新回调函数 */
+    );
+  },
+};
+o.f();
 /*
   避免回调函数中的 this, 回调函数中的 this 往往会改变指向, 最好避免使用
 */
@@ -377,7 +405,9 @@ o.f();
   Function.prototype.apply()
   Function.prototype.bind()
 
-  指定函数内部 this 的指向(函数执行时所在的作用域), 然后再所指定的作用域中, 调用该函数
+  call 和 bind
+    指定函数内部 this 的指向(函数执行时所在的作用域),
+    然后再所指定的作用域中, 调用该函数(注意需要调用一次该函数)
 */
 var obj = {};
 var f = function () {
@@ -450,15 +480,17 @@ o.f = function () {
   console.log(this === o);
 };
 var f = function () {
-  o.f.apply(o);
+  o.f.apply(
+    o
+  ); /* apply 以及 call 不仅仅绑定函数执行时所在的对象, 还会立即执行函数, 因此不得不把绑定语句写在一个函数体内 */
 };
 $('#button').on('click', f);
 
-/* bind() 方法用于将函数体内的 this 绑定到某个对象, 然后返回一个新函数 */
+/* bind() 方法用于将函数体内的 this 绑定到某个对象, 然后返回一个新函数, 而不是立即执行一次函数 */
 /*
   bind VS call apply
   bind 返回一个新函数(没有立即执行, 永久绑定)
-  call apply 在所指定的作用域中, 调用该函数(立即执行, 立即执行)
+  call apply 在所指定的作用域中, 调用该函数(立即执行)
 */
 var counter = {
   count: 0,
@@ -478,9 +510,19 @@ function add(x, y) {
   return x + y;
 }
 var plus5 = add.bind(null, 5); // 甚至可以绑定参数
-console.log(plus5(10)); // 15
+console.log(plus5(10)); // 15, 已经绑定了一个参数, 所以只要再给定一个参数就可以了
 
 /* bind 方法每运行一次, 就返回一个新函数 */
+/*
+  每一次点击, bind 将创建一个新的匿名函数(监听函数)
+  导致无法取消绑定
+*/
+element.addEventListener('click', o.m.bind(o));
+element.removeEventListener('click', o.m.bind(o)); /* 无效 */
+// 正确的写法
+var listener = o.m.bind(o);
+element.addEventListener('click', listener);
+element.removeEventListener('click', listener);
 
 /* bind + 回调函数 */
 var counter = {
@@ -490,8 +532,8 @@ var counter = {
   },
 };
 function callIt(callback) {
-  callback();
+  callback(); /* 不使用 bind 绑定的话, this 将指向 global */
 }
 callIt(counter.inc.bind(counter)); // callIt 需要一个回调函数作为参数
-// callIt(counter.inc.call(counter)); // call apply 立即执行, 不等回调, 不能使用
+// callIt(counter.inc.call(counter)); // call apply 立即执行(没有返回结果, count 自增 1, 而我们需要返回一个回调函数), 不等回调, 不能使用
 console.log(counter.count);

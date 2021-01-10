@@ -1,8 +1,9 @@
 /*
-  描述对象的属性, 控制它的行为
-  是否可写
-  可遍历性
-  每个属性都有自己对应的属性描述对象, 保存该属性的一些元信息
+  属性描述对象:
+    描述对象的属性, 控制它的行为
+    该属性是否可写
+    该属性是否具有可遍历性
+    每个属性都有自己对应的属性描述对象, 保存该属性的一些元信息
 */
 
 /*
@@ -10,7 +11,9 @@
     value 默认为 undefined
     writable 默认为 true
     enumerable  默认为 true 如果设为 false 则 for...in Object.keys() 跳过该属性
-    configurable 默认为 true 属性描述对象的可写性 "锁死"
+    configurable 默认为 true 控制属性描述对象的可写性(可配置性)
+      如果设为 false "锁死"
+        阻止某些操作改写该属性, 无法删除该属性, 不得改变该属性的 "属性描述符对象(value 属性除外)"
 */
 
 /*
@@ -19,22 +22,27 @@
     set 存值函数 默认为 undefined
     enumerable 默认为 true 如果设为 false 则 for...in Object.keys() 跳过该属性
     configurable 默认为 true 属性描述对象的可写性
+      如果设为 false "锁死"
+        阻止某些操作改写改属性, 无法删除该属性, 不得改变该属性的 "属性描述符对象, 其中 value 属性除外"
 */
 
 var obj = {
   p: 'a',
-}
+};
 /*
-  只能用于对象自身的属性
-  第一个参数是目标对象
-  第二个参数是一个字符串, 对应目标对象的某个属性名
+  getOwnPropertyDescriptor 方法
+    只能用于对象自身的属性
+    第一个参数是目标对象
+    第二个参数是一个字符串, 对应目标对象的某个属性名
 */
 // { value: 'a', writable: true, enumerable: true, configurable: true }
-console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
+console.log(Object.getOwnPropertyDescriptor(obj, 'p'));
 // 不能用于继承的属性
-console.log(Object.getOwnPropertyDescriptor(obj, 'toString')) // undefined
+console.log(Object.getOwnPropertyDescriptor(obj, 'toString')); // undefined
 
-// Object.getOwnPropertyNames() 获取到对象自身的全部属性的属性名, 不管该属性是否可遍历
+/*
+  Object.getOwnPropertyNames() 自身 + 可遍历 + 不可遍历 => 属性名 返回值是数组
+*/
 var obj = Object.defineProperties(
   {},
   {
@@ -46,27 +54,34 @@ var obj = Object.defineProperties(
       value: 2,
       enumerable: false,
     },
-  },
-)
-console.log(Object.getOwnPropertyNames(obj)) // [ 'p1', 'p2' ]
-console.log(Object.keys(obj)) // [ 'p1' ]
+  }
+);
+console.log(Object.getOwnPropertyNames(obj)); // [ 'p1', 'p2' ] 自身 + 可遍历 + 不可遍历
+console.log(Object.keys(obj)); // [ 'p1' ] 自身 + 可遍历
 
 // 通过属性描述对象, 定义或修改一个属性, 然后返回修改后的对象 Object.defineProperty()
 /*
-  第一个参数: object 属性所在的对象
-  第二个参数: propertyName 字符串, 属性名
-  第三个参数: 属性描述对象
+  返回值: 修改后的对象
+  第一个参数: 属性所在的对象 Object
+  第二个参数: 属性名 string
+  第三个参数: 属性描述符对象
 */
 var obj = Object.defineProperty({}, 'p', {
   value: 123,
   writable: false,
   enumerable: true,
   configurable: false,
-})
-console.log(obj.p) // 123
-obj.p = 246 // writable: false
-console.log(obj.p) // 123
+});
+console.log(obj.p); // 123
+obj.p = 246; // writable: false
+console.log(obj.p); // 123
+
 // 一次性定义或者修改多个属性(的属性描述对象), 使用 Object.defineProperties() 方法
+/*
+  第一个参数: 目标对象
+  第二个参数: 全部属性的属性描述符对象集合(对象里面还有多个对象, 其中每一个对象就是一个"属性描述符对象")
+  返回值: 修改后的对象
+*/
 var obj = Object.defineProperties(
   {},
   {
@@ -80,40 +95,49 @@ var obj = Object.defineProperties(
     },
     p3: {
       get: function () {
-        return this.p1 + this.p2
+        return this.p1 + this.p2;
       },
       enumerable: true,
       configurable: true,
     },
-  },
-)
-console.log(obj.p1) // 123
-console.log(obj.p2) // abc
-console.log(obj.p3) // 123abc
+  }
+);
+console.log(obj.p1); // 123
+console.log(obj.p2); // abc
+console.log(obj.p3); // 123abc
 
 // 一旦定义了取值函数(get)或者存值函数(set), 就不能同时定义 value 属性以及 writable 属性, 否则报错
-var obj = {}
+/*
+  两套 "属性描述符对象" 的形式
+  value writable configurable enumerable
+  get set configurable enumerable
+*/
+var obj = {};
 // TypeError: Invalid property descriptor. Cannot both specify accessors and a value or writable attribute, #<Object>
 Object.defineProperty(obj, 'p', {
   value: 123,
   get: function () {
-    return 456
+    return 456;
   },
-})
+});
 
-var obj = {}
+var obj = {};
 // TypeError: Invalid property descriptor. Cannot both specify accessors and a value or writable attribute, #<Object>
 Object.defineProperty(obj, 'p', {
   // writable: false,
   writable: true,
   get: function () {
-    return 456
+    return 456;
   },
-})
+});
 
-// Object.defineProperty() Object.defineProperties() 参数里面的属性描述符对象, writable configurable enumerable 这三个属性默认值都是 false
-var obj = {}
-Object.defineProperty(obj, 'foo', {})
+/*
+  Object.defineProperty() 和
+  Object.defineProperties()
+  参数里面的属性描述符对象, writable configurable enumerable 这三个属性默认值都是 false
+*/
+var obj = {};
+Object.defineProperty(obj, 'foo', {});
 /*
   {
     value: undefined,
@@ -122,13 +146,13 @@ Object.defineProperty(obj, 'foo', {})
     configurable: false
   }
 */
-console.log(Object.getOwnPropertyDescriptor(obj, 'foo'))
+console.log(Object.getOwnPropertyDescriptor(obj, 'foo'));
 
-var obj = {}
+var obj = {};
 Object.defineProperties(obj, {
   p1: {},
   p2: {},
-})
+});
 /*
   {
   value: undefined,
@@ -143,31 +167,36 @@ Object.defineProperties(obj, {
   configurable: false
 }
 */
-console.log(Object.getOwnPropertyDescriptor(obj, 'p1'))
-console.log(Object.getOwnPropertyDescriptor(obj, 'p2'))
+console.log(Object.getOwnPropertyDescriptor(obj, 'p1'));
+console.log(Object.getOwnPropertyDescriptor(obj, 'p2'));
 
 /*
   元属性, 属性描述对象的各个属性, 控制属性的属性
 */
-// 如果原型对象的某个属性的 writable 为 false, 那么子对象将无法自定义这个属性
+// 如果原型对象的某个属性的 元属性 writable 的值为 false, 那么子对象将无法自定义这个属性
 var proto = Object.defineProperty({}, 'foo', {
   value: 'a',
   writable: false,
-})
-var obj = Object.create(proto)
+});
+var obj = Object.create(proto);
 // 子对象不可以对 foo 进行再定义
-obj.foo = 'b'
-console.log(obj.foo) // 'a'
+obj.foo = 'b';
+console.log(obj.foo); // 'a'
+
 // 子对象直接通过覆盖属性描述对象, 绕过这个限制, 此时原型链会被忽略
 Object.defineProperty(obj, 'foo', {
   value: 'b',
-})
-console.log(obj.foo) // 'b'
+});
+console.log(obj.foo); // 'b'
 
 /*
-  enumerable
+  enumerable 可遍历性
   toString 这一类实例对象继承的原生属性, 都是不可遍历的
-  为 false 则 for ... in Object.keys() JSON.stringify() 方法取不到该属性
+  为 false
+    for in
+    Object.keys
+    JSON.stringify
+  这三个操作不会取到该属性
   基于此 enumerable 可以用来设置 "秘密" 属性
 */
 /*
@@ -178,80 +207,94 @@ console.log(obj.foo) // 'b'
     configurable: true
   }
 */
-console.log(Object.getOwnPropertyDescriptor(Object.prototype, 'toString'))
+console.log(Object.getOwnPropertyDescriptor(Object.prototype, 'toString'));
 
-var obj = {}
+var obj = {};
 Object.defineProperty(obj, 'x', {
   value: 123,
   enumerable: false,
-})
-console.log(obj.x) // 123
+});
+console.log(obj.x); // 123
 
 for (var key in obj) {
-  console.log(key) // undefined
+  console.log(key); // undefined
 }
-console.log(Object.keys(obj)) // []
+console.log(Object.keys(obj)); // []
 // 利用 JSON.stringify() 方法会排除 enumerable 为 false 的属性, 这一特点, 如果对象的 JSON 格式输出要排除某些属性, 就可以把这些属性的 enumerable 设为 false
-console.log(JSON.stringify(obj)) // {}
+console.log(JSON.stringify(obj)); // {}
 
 /*
-  configurable 决定了是否可以修改属性描述对象
-  configurable 为 false 则 value writable enumerable configurable 都不能被修改了
+  configurable 决定了是否可以修改属性描述对象, 属性描述符对象的可配置可修改性
+  configurable 为 false 则 value writable enumerable configurable 都不能被修改了 锁死
 */
 var obj = Object.defineProperty({}, 'p', {
   value: 1,
   writable: false,
   enumerable: false,
   configurable: false,
-})
+});
 // TypeError: Cannot redefine property: p
 Object.defineProperty(obj, 'p', {
   value: 2,
-})
+});
 // TypeError: Cannot redefine property: p
 Object.defineProperty(obj, 'p', {
   writable: true,
-})
+});
 // TypeError: Cannot redefine property: p
 Object.defineProperty(obj, 'p', {
   enumerable: true,
-})
+});
 // TypeError: Cannot redefine property: p
 Object.defineProperty(obj, 'p', {
   configurable: true,
-})
-// 注意: writable 只有在 false => true 会报错, true => false 是允许的
-// 权限只能继续收窄
+});
+// 权限只能继续收窄 writable: false => true 报错, true => false 允许
 var obj = Object.defineProperty({}, 'p', {
   writable: true,
   configurable: false,
-})
+});
 Object.defineProperty(obj, 'p', {
   writable: false,
-})
+});
 
 // 只要 writable 和 configurable 有一个为 true 就允许改动 value 值
+/*
+  writable || configurable === true 就允许改动 value 值
+*/
 var o1 = Object.defineProperty({}, 'p', {
   value: 1,
   writable: true,
   configurable: true,
-})
-console.log(o1.p) // 1
+});
+console.log(o1.p); // 1
 Object.defineProperty(o1, 'p', {
   value: 2,
-})
+});
 // 修改成功
-console.log(o1.p) // 2
+console.log(o1.p); // 2
+
 var o2 = Object.defineProperty({}, 'p', {
   value: 1,
   writable: false,
   configurable: true,
-})
-console.log(o2.p) // 1
+});
+console.log(o2.p); // 1
 Object.defineProperty(o2, 'p', {
   value: 2,
-})
-console.log(o2.p) // 2
+});
+console.log(o2.p); // 2 writable: false configurable: true 允许修改
+
+var o3 = Object.defineProperty({}, 'p', {
+  value: 1,
+  writable: true,
+  configurable: false,
+});
+console.log(o3.p); // 1
+Object.defineProperty(o3, 'p', {
+  value: 2,
+});
+console.log(o3.p); // 2 writable: true configurable: false 允许修改
 
 // writable 为 false 时, 直接赋值不生效, 严格模式, 报错
 // 'use strict'
@@ -259,9 +302,9 @@ var obj = Object.defineProperty({}, 'p', {
   value: 1,
   writable: false,
   configurable: false,
-})
-obj.p = 2
-console.log(obj.p) // 1
+});
+obj.p = 2;
+console.log(obj.p); // 1
 
 // configurable 可配置性, 决定了目标属性是否可以被删除 delete
 var obj = Object.defineProperties(
@@ -275,12 +318,12 @@ var obj = Object.defineProperties(
       value: 2,
       configurable: false,
     },
-  },
-)
-delete obj.p1
-delete obj.p2
-console.log(obj.p1) // undefined
-console.log(obj.p2) // 2 configurable 为 false 无法被删除
+  }
+);
+delete obj.p1;
+delete obj.p2;
+console.log(obj.p1); // undefined
+console.log(obj.p2); // 2 configurable 为 false 无法被删除
 
 // 存取器 getter 不能接受参数 setter 只能接受一个参数, 即属性的值
 /*
@@ -289,14 +332,14 @@ console.log(obj.p2) // 2 configurable 为 false 无法被删除
 */
 var obj = Object.defineProperty({}, 'p', {
   get: function () {
-    return 'getter'
+    return 'getter';
   },
   set: function (value) {
-    console.log('setter: ' + value)
+    console.log('setter: ' + value);
   },
-})
-console.log(obj.p) // 'getter'
-obj.p = 123 // 'setter: 123'
+});
+console.log(obj.p); // 'getter'
+obj.p = 123; // 'setter: 123'
 /*
   {
     get: [Function: get],
@@ -306,7 +349,7 @@ obj.p = 123 // 'setter: 123'
   }
   enumerable configurable 默认为 false
 */
-console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
+console.log(Object.getOwnPropertyDescriptor(obj, 'p'));
 
 /*
   写法二: 没有 function
@@ -314,14 +357,14 @@ console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
 */
 var obj = {
   get p() {
-    return 'getter'
+    return 'getter';
   },
   set p(value) {
-    console.log('setter: ' + value)
+    console.log('setter: ' + value);
   },
-}
-console.log(obj.p)
-obj.p = 123
+};
+console.log(obj.p);
+obj.p = 123;
 /*
   {
     get: [Function: get p],
@@ -331,156 +374,50 @@ obj.p = 123
   }
   enumerable configurable 默认为 true, 实际开发中更为常用
 */
-console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
+console.log(Object.getOwnPropertyDescriptor(obj, 'p'));
 
 // 存取器往往用于, 属性的值依赖对象内部数据的场合
 var obj = {
   $n: 5,
   get next() {
-    return this.$n++
+    return this.$n++;
   },
   set next(n) {
     if (n >= this.$n) {
-      this.$n = n
+      this.$n = n;
     } else {
-      throw new Error('新的值必须大于当前值')
+      throw new Error('新的值必须大于当前值');
     }
   },
-}
-console.log(obj.next)
-obj.next = 10
-console.log(obj.next)
-obj.next = 5
+};
+console.log(obj.next);
+obj.next = 10;
+console.log(obj.next);
+obj.next = 5;
 
 // 对象的拷贝, 通过 Object.defineProperty() 方法来拷贝属性
-let extend = function (to, from) {
+const extend = function (to, from) {
   for (const property in from) {
     // 跳过继承的属性
-    if (!from.hasOwnProperty(property)) continue
+    if (!from.hasOwnProperty(property)) {
+      continue;
+    }
     // 开始拷贝
     Object.defineProperty(
       to,
       property,
       // 拷贝属性的描述符对象, getOwnPropertyDescriptor 读不到继承属性的属性描述对象, 因此需要过滤掉继承的属性
-      Object.getOwnPropertyDescriptor(from, property),
-    )
+      Object.getOwnPropertyDescriptor(from, property)
+    );
   }
-  return to
-}
-let copy = extend(
-  {},
+  return to;
+};
+const copy = extend(
+  {} /* to */,
   {
     get a() {
-      return 1
+      return 1;
     },
-  },
-)
-console.log(copy) // { a: [Getter] }
-
-/*
-  属性描述符
-    描述对象的属性, 控制它的行为, 可写 可遍历 ... 元信息
-*/
-/*
-  value 该属性的属性值, 默认为 undefined
-  writable 可写性(value 是否能够更改), 默认为 true
-  enumerable 遍历性, 默认为 true, 如果为 false Object.keys() for ... in 循环将跳过该属性
-  configurable 可配置性(属性描述符的可写性), 默认为 true 如果设为 false 将无法删除该属性, 不得改变该属性的属性描述符
-  get 取值函数, 默认为 undefined
-  set 存值函数, 默认为 undefined
-*/
-
-let obj = { p: 'a' }
-// { value: 'a', writable: true, enumerable: true, configurable: true }
-console.log(Object.getOwnPropertyDescriptor(obj, 'p'))
-// Object.getOwnPropertyDescriptor() 只能用于自身的属性, 不能用于继承的属性(原型的属性)
-var obj = { p: 'a' }
-console.log(Object.getOwnPropertyDescriptor(obj, 'toString')) // undefined
-
-/* Object.getOwnPropertyNames() 遍历√ 不可遍历√ 返回一个数组, 成员是参数对象自身的全部属性的属性名 */
-/* 自身√ 继承× */
-let obj = Object.defineProperties(
-  {},
-  {
-    p1: { value: 1, enumerable: true },
-    p2: { value: 2, enumerable: false },
-  },
-)
-console.log(Object.getOwnPropertyNames(obj)) // [ 'p1', 'p2' ] 遍历√ 不可遍历√ 自身√ 继承×
-console.log(Object.keys(obj)) // [ 'p1'] 遍历√ 不可遍历× 自身√ 继承×
-
-console.log(Object.keys(Object.prototype)) // []
-console.log(Object.getOwnPropertyNames(Object.prototype))
-/*
-[
-  'constructor',
-  '__defineGetter__',
-  '__defineSetter__',
-  'hasOwnProperty',
-  '__lookupGetter__',
-  '__lookupSetter__',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toString',
-  'valueOf',
-  '__proto__',
-  'toLocaleString'
-]
-*/
-
-/*
-  Object.defineProperty() 方法允许通过属性描述对象, 定义或修改一个属性, 然后返回修改后的对象
-    修改一个属性的属性描述符, 然后返回的是此对象(目标属性所在的对象)
-  参数
-    object 属性所在的对象
-    propertyName 字符串 属性名
-    attributeObject 属性描述对象
-*/
-
-let obj = Object.defineProperty({}, 'p', {
-  value: 123,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-})
-console.log(obj.p) // 123
-obj.p = 246
-console.log(obj.p) // 123
-/*
-  一次性定义或者修改多个属性, 可以使用 Object.defineProperties() 方法
-*/
-var obj = Object.defineProperties(
-  {},
-  {
-    p1: {
-      value: 123,
-      enumerable: true,
-    },
-    p2: {
-      value: 'abc',
-      enumerable: true,
-    },
-    p3: {
-      get: function () {
-        return this.p1 + this.p2
-      },
-      enumerable: true,
-      configurable: true,
-    },
-  },
-)
-console.log(obj.p1)
-console.log(obj.p2)
-console.log(obj.p3)
-/*
-  一旦定义了 get 和 set 就不能同时定义 writable 属性和 value 属性, 否则报错
-*/
-var obj = {}
-Object.defineProperty(obj, 'p', {
-  value: 123,
-  get: function () {
-    return 456
-  }
-}) /* TypeError: Invalid property descriptor. Cannot both specify accessors and a value or writable attribute, #<Object>
-*/
-let obj = {}
+  } /*  */
+);
+console.log(copy); // { a: [Getter] }
